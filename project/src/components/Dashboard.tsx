@@ -20,48 +20,48 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
-        setShowNotifications(false);
-      }
+  const handleClickOutside = React.useCallback((event: MouseEvent) => {
+    if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+      setShowNotifications(false);
     }
+  }, []);
+
+  useEffect(() => {
     if (showNotifications) {
       document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+  }, [showNotifications, handleClickOutside]);
+
+  const filteredCases = React.useMemo(() => {
+    return cases.filter(caseItem => {
+      const matchesSearch = searchTerm === '' || 
+        caseItem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        caseItem.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = filterStatus === 'all' || caseItem.status === filterStatus;
+      return matchesSearch && matchesFilter;
+    });
+  }, [cases, searchTerm, filterStatus]);
+
+  const getStatusColor = React.useCallback((status: string) => {
+    const colors = {
+      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      reviewing: 'bg-blue-100 text-blue-800 border-blue-200',
+      approved: 'bg-green-100 text-green-800 border-green-200',
+      rejected: 'bg-red-100 text-red-800 border-red-200'
     };
-  }, [showNotifications]);
+    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800 border-gray-200';
+  }, []);
 
-  const filteredCases = cases.filter(caseItem => {
-    const matchesSearch = caseItem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         caseItem.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || caseItem.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'reviewing': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'approved': return 'bg-green-100 text-green-800 border-green-200';
-      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending': return <Clock className="w-4 h-4" />;
-      case 'reviewing': return <FileText className="w-4 h-4" />;
-      case 'approved': return <CheckCircle className="w-4 h-4" />;
-      case 'rejected': return <AlertCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
-    }
-  };
+  const getStatusIcon = React.useCallback((status: string) => {
+    const icons = {
+      pending: <Clock className="w-4 h-4" />,
+      reviewing: <FileText className="w-4 h-4" />,
+      approved: <CheckCircle className="w-4 h-4" />,
+      rejected: <Clock className="w-4 h-4" />
+    };
+    return icons[status as keyof typeof icons] || <Clock className="w-4 h-4" />;
+  }, []);
 
 
   return (

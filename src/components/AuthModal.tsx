@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { loginUser, signupUser } from '../services/api';
 
 interface AuthModalProps {
   mode: 'login' | 'signup';
@@ -73,22 +74,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
     if (!validateForm()) return;
     try {
       if (mode === 'login') {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: formData.email, password: formData.password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Login failed');
+        const data = await loginUser(formData.email, formData.password);
         onLogin(formData.email, formData.password);
       } else {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/signup`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Signup failed');
+        const data = await signupUser(formData.name, formData.email, formData.password);
         onSignup(formData.name, formData.email, formData.password);
       }
     } catch (err: any) {

@@ -75,7 +75,11 @@ function App() {
   }, [currentUser]);
 
   const fetchCases = async (userId: string) => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/cases/${userId}`);
+    const res = await fetch(`/.netlify/functions/get-cases?userId=${userId}`, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
     const data = await res.json();
     // Convert ISO date strings to Date objects
     const casesWithDates = data.map((caseItem: any) => ({

@@ -68,22 +68,49 @@ const AuthModal: React.FC<AuthModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setServerError('');
     if (!validateForm()) return;
     try {
       if (mode === 'login') {
-        const data = await loginUser(formData.email, formData.password);
+        // Get stored users
+        const storedUsers = JSON.parse(localStorage.getItem('users') || '[]');
+        
+        // Find user
+        const user = storedUsers.find((u: any) => u.email.toLowerCase() === formData.email.toLowerCase());
+        
+        if (!user) {
+          throw new Error('Invalid email or password');
+        }
+
+        // In a real app, you would verify the password here
+        const res = await fetch(`/.netlify/functions/auth-login`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Stored-Users': encodeURIComponent(JSON.stringify(storedUsers))
+          },
+          body: JSON.stringify({ email: formData.email, password: formData.password })
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
         onLogin(formData.email, formData.password);
       } else {
-        const data = await signupUser(formData.name, formData.email, formData.password);
+        const res = await fetch(`/.netlify/functions/auth-signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Signup failed');
         onSignup(formData.name, formData.email, formData.password);
       }
     } catch (err: any) {
       setServerError(err.message);
     }
-  };
+      }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

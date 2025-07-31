@@ -90,7 +90,7 @@ function App() {
     setCases(casesWithDates);
   };
 
-  const handleLogin = (email: string, password: string) => {
+  const handleLogin = async (email: string, password: string) => {
     try {
       const users = JSON.parse(localStorage.getItem('users') || '[]');
       const user = users.find((u: UserData) => u.email.toLowerCase() === email.toLowerCase());
@@ -102,12 +102,22 @@ function App() {
       setCurrentUser(user);
       setShowAuthModal(false);
       setCurrentPage('dashboard');
+      
       // Filter cases for this user
       const allCases = JSON.parse(localStorage.getItem('cases') || '[]');
       const userCases = allCases.filter((c: CaseData) => c.clientEmail.toLowerCase() === email.toLowerCase());
       setCases(userCases);
       
       localStorage.setItem('currentUser', JSON.stringify(user));
+      
+      // Update the last login timestamp
+      const updatedUsers = users.map((u: UserData) => {
+        if (u.email.toLowerCase() === email.toLowerCase()) {
+          return { ...u, lastLogin: new Date().toISOString() };
+        }
+        return u;
+      });
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
     } catch (err: any) {
       alert(err.message);
     }

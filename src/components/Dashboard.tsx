@@ -104,16 +104,42 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <h3 className="font-semibold text-gray-900">Recent Cases</h3>
                       </div>
                       <div className="max-h-64 overflow-y-auto">
-                        {cases.slice(0, 5).map((caseItem) => (
+                        {cases
+                          .sort((a, b) => new Date(a.nextDate).getTime() - new Date(b.nextDate).getTime())
+                          .slice(0, 5)
+                          .map((caseItem) => (
                           <div key={caseItem.id} className="p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors duration-200">
                             <div className="flex items-start space-x-3">
                               <div className="flex-shrink-0 w-2 h-2 rounded-full mt-2 bg-blue-500"></div>
                               <div className="flex-1">
                                 <p className="text-sm font-medium text-gray-900">{caseItem.title}</p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Case No: {caseItem.caseNumber}
-                                </p>
+                                <div className="flex flex-col space-y-1 mt-1">
+                                  <p className="text-xs text-gray-500">
+                                    Case No: {caseItem.caseNumber}
+                                  </p>
+                                  <p className="text-xs text-gray-500 flex items-center">
+                                    <Calendar className="w-3 h-3 mr-1" />
+                                    Next Date: {new Date(caseItem.nextDate).toLocaleDateString()}
+                                  </p>
+                                  <p className={`text-xs flex items-center ${
+                                    caseItem.status === 'pending' ? 'text-yellow-600' :
+                                    caseItem.status === 'reviewing' ? 'text-blue-600' :
+                                    caseItem.status === 'approved' ? 'text-green-600' :
+                                    'text-red-600'
+                                  }`}>
+                                    {getStatusIcon(caseItem.status)}
+                                    <span className="ml-1">Status: {caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1)}</span>
+                                  </p>
+                                </div>
                               </div>
+                              {/* Time until next date */}
+                              {caseItem.nextDate && (
+                                <div className="flex-shrink-0 text-right">
+                                  <p className="text-xs font-medium text-blue-600">
+                                    {Math.ceil((new Date(caseItem.nextDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}

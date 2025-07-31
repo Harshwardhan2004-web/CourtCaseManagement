@@ -4,8 +4,8 @@
   publish = "dist/spa"
 
 [build.environment]
-  NODE_VERSION = "18"
-  corepack = "true"  # ✅ fixed
+  NODE_VERSION = "20"     
+  corepack = "true"       
 
 [functions]
   external_node_modules = ["express"]

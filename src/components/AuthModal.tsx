@@ -72,39 +72,41 @@ const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     setServerError('');
     if (!validateForm()) return;
+
     try {
+      // Get stored users
+      const storedUsers = JSON.parse(localStorage.getItem('users') || '[]');
+
       if (mode === 'login') {
-        // Get stored users
-        const storedUsers = JSON.parse(localStorage.getItem('users') || '[]');
-        
-        // Find user
+        // Find user for login
         const user = storedUsers.find((u: any) => u.email.toLowerCase() === formData.email.toLowerCase());
         
         if (!user) {
           throw new Error('Invalid email or password');
         }
 
-        // In a real app, you would verify the password here
-        const res = await fetch(`/.netlify/functions/auth-login`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-Stored-Users': encodeURIComponent(JSON.stringify(storedUsers))
-          },
-          body: JSON.stringify({ email: formData.email, password: formData.password })
-        });
-        
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Login failed');
         onLogin(formData.email, formData.password);
       } else {
-        const res = await fetch(`/.netlify/functions/auth-signup`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Signup failed');
+        // Check if email already exists for signup
+        const existingUser = storedUsers.find((u: any) => u.email.toLowerCase() === formData.email.toLowerCase());
+        
+        if (existingUser) {
+          throw new Error('Email already registered');
+        }
+
+        // Create new user
+        const newUser = {
+          id: Date.now().toString(),
+          name: formData.name,
+          email: formData.email.toLowerCase(),
+          role: 'client',
+          createdAt: new Date().toISOString()
+        };
+
+        // Add to stored users
+        storedUsers.push(newUser);
+        localStorage.setItem('users', JSON.stringify(storedUsers));
+
         onSignup(formData.name, formData.email, formData.password);
       }
     } catch (err: any) {

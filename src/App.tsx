@@ -25,6 +25,8 @@ export interface UserData {
   name: string;
   email: string;
   role: 'client' | 'lawyer';
+  createdAt?: string;
+  lastLogin?: string;
 }
 
 function App() {
@@ -99,25 +101,33 @@ function App() {
         throw new Error('Invalid email or password');
       }
 
-      setCurrentUser(user);
+      // Update user with login time
+      const updatedUser = {
+        ...user,
+        lastLogin: new Date().toISOString()
+      };
+
+      // Update users in localStorage
+      const updatedUsers = users.map((u: UserData) => 
+        u.email.toLowerCase() === email.toLowerCase() ? updatedUser : u
+      );
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+
+      // Set current user
+      setCurrentUser(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+
+      // Update UI state
       setShowAuthModal(false);
       setCurrentPage('dashboard');
-      
-      // Filter cases for this user
+
+      // Load user's cases
       const allCases = JSON.parse(localStorage.getItem('cases') || '[]');
-      const userCases = allCases.filter((c: CaseData) => c.clientEmail.toLowerCase() === email.toLowerCase());
+      const userCases = allCases.filter((c: CaseData) => 
+        c.clientEmail.toLowerCase() === email.toLowerCase()
+      );
       setCases(userCases);
-      
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      
-      // Update the last login timestamp
-      const updatedUsers = users.map((u: UserData) => {
-        if (u.email.toLowerCase() === email.toLowerCase()) {
-          return { ...u, lastLogin: new Date().toISOString() };
-        }
-        return u;
-      });
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
+
     } catch (err: any) {
       alert(err.message);
     }
@@ -135,18 +145,26 @@ function App() {
         id: Date.now().toString(),
         name,
         email: email.toLowerCase(),
-        role: 'client'
+        role: 'client',
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
       };
 
+      // Save to localStorage
       users.push(newUser);
       localStorage.setItem('users', JSON.stringify(users));
       
+      // Update app state
       setCurrentUser(newUser);
+      localStorage.setItem('currentUser', JSON.stringify(newUser));
       setShowAuthModal(false);
       setCurrentPage('dashboard');
       setCases([]);
-      
-      localStorage.setItem('currentUser', JSON.stringify(newUser));
+
+      // Initialize empty cases array for new user
+      const allCases = JSON.parse(localStorage.getItem('cases') || '[]');
+      localStorage.setItem('cases', JSON.stringify(allCases));
+
     } catch (err: any) {
       alert(err.message);
     }

@@ -73,7 +73,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     if (!validateForm()) return;
     try {
       if (mode === 'login') {
-        const res = await fetch('http://localhost:5000/api/login', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: formData.email, password: formData.password })
@@ -82,7 +82,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
         if (!res.ok) throw new Error(data.error || 'Login failed');
         onLogin(formData.email, formData.password);
       } else {
-        const res = await fetch('http://localhost:5000/api/signup', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/signup`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password })

@@ -5,7 +5,7 @@
 
 [build.environment]
   NODE_VERSION = "18"
-  corepack = true
+  corepack = "true"  # ✅ fixed
 
 [functions]
   external_node_modules = ["express"]
